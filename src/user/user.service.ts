@@ -8,13 +8,17 @@ export class UserService {
   constructor(private readonly prismaService: PrismaService) {}
 
   async createUser(user: UserRegisterDTO): Promise<User> {
-    return this.prismaService.user.create({
-      data: {
-        email: user.email,
-        name: user.name,
-        password: user.password,
-      },
-    });
+    try {
+      return await this.prismaService.user.create({
+        data: {
+          email: user.email,
+          name: user.name,
+          password: user.password,
+        },
+      });
+    } catch (error) {
+      return null;
+    }
   }
 
   async UpdatePasswordByEmail(

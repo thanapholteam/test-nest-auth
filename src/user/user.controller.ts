@@ -84,7 +84,16 @@ export class UserController {
         .json({ message: 'Invalid body' })
         .send();
     }
-    await this.userService.createUser(userRegisterDTO);
+    const user = await this.userService.createUser(userRegisterDTO);
+
+    if (user === null) {
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json({
+          message: 'Email already use',
+        })
+        .send();
+    }
 
     return res
       .status(HttpStatus.CREATED)
