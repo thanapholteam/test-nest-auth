@@ -6,8 +6,9 @@ import { SessionModule } from './session/session.module';
 import { UserModule } from './user/user.module';
 import { PrismaModule } from './prisma/prisma.module';
 import { AuthModule } from './auth/auth.module';
+import { OtpModule } from './otp/otp.module';
 @Module({
-  imports: [AuthModule, PrismaModule, UserModule, SessionModule],
+  imports: [AuthModule, PrismaModule, UserModule, SessionModule, OtpModule],
   controllers: [AppController],
   providers: [AppService],
 })

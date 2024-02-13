@@ -1,10 +1,5 @@
 import { IsEmail, IsString } from 'class-validator';
 
-export class UserDTO {
-  email: string;
-  password: string;
-  name: number;
-}
 export class UserRegisterDTO {
   @IsEmail()
   email: string;
@@ -21,7 +16,25 @@ export class UserLoginDTO {
   password: string;
 }
 
-export class UserForgotDTO {
+export class UserForgotStep {
   @IsEmail()
   email: string;
+}
+
+export class UserVerifyStep {
+  @IsString()
+  id: string;
+  @IsEmail()
+  email: string;
+  @IsString()
+  code: string;
+}
+
+export class UserRepasswordStep {
+  @IsString()
+  id: string;
+  @IsEmail()
+  email: string;
+  @IsString()
+  newPassword: string;
 }

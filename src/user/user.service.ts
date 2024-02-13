@@ -17,6 +17,20 @@ export class UserService {
     });
   }
 
+  async UpdatePasswordByEmail(
+    email: string,
+    newPassword: string,
+  ): Promise<User> {
+    return await this.prismaService.user.update({
+      where: {
+        email: email,
+      },
+      data: {
+        password: newPassword,
+      },
+    });
+  }
+
   async findUserByID(id: string): Promise<User> {
     return await this.prismaService.user.findUnique({
       where: {

@@ -1,3 +1,4 @@
+import { OtpService } from 'src/otp/otp.service';
 import { SessionService } from 'src/session/session.service';
 import { AuthService } from './../auth/auth.service';
 import { UserService } from './user.service';
@@ -13,7 +14,13 @@ import {
 } from '@nestjs/common';
 import { Response } from 'express';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { UserForgotDTO, UserLoginDTO, UserRegisterDTO } from './dto/user.dto';
+import {
+  UserForgotStep,
+  UserLoginDTO,
+  UserRegisterDTO,
+  UserRepasswordStep,
+  UserVerifyStep,
+} from './dto/user.dto';
 
 @Controller('user')
 export class UserController {
@@ -21,6 +28,7 @@ export class UserController {
     private readonly userService: UserService,
     private readonly authService: AuthService,
     private readonly sessionService: SessionService,
+    private readonly otpService: OtpService,
   ) {}
 
   @Get('/me')
@@ -86,10 +94,19 @@ export class UserController {
       .send();
   }
 
+  @Get('/logout')
+  @UseGuards(AuthGuard)
+  async logout(@Req() req: Request, @Res() res: Response) {
+    await this.sessionService.deleteSession(req['ssid']);
+    res.clearCookie('ssid');
+    res.json({ message: 'success' }).status(HttpStatus.OK);
+    return res.end();
+  }
+
   @Post('/forgot')
   async forgetPassword(
     @Req() req: Request,
-    @Body() data: UserForgotDTO,
+    @Body() data: UserForgotStep,
     @Res() res: Response,
   ) {
     if (!data.email) {
@@ -106,16 +123,68 @@ export class UserController {
         .send();
     }
 
+    const opt = await this.otpService.findOTPByUserID(user.id);
+
+    if (opt.length !== 0) {
+      for (let i = 0; i < opt.length; i++) {
+        await this.otpService.deleteOTP(opt[i].id);
+      }
+    }
+
+    const otpId = await this.otpService.createOTP(user.id);
+
     // TODO: Send Email
-    return res.json({ message: 'success' }).send();
+
+    return res.json({ message: 'success', url: otpId.id }).send();
   }
 
-  @Get('/logout')
-  @UseGuards(AuthGuard)
-  async logout(@Req() req: Request, @Res() res: Response) {
-    await this.sessionService.deleteSession(req['ssid']);
-    res.clearCookie('ssid');
-    res.json({ message: 'success' }).status(HttpStatus.OK);
-    return res.end();
+  @Post('/verify/otp')
+  async verifyOtp(
+    @Req() req: Request,
+    @Body() data: UserVerifyStep,
+    @Res() res: Response,
+  ) {
+    if (!data.id || !data.email || !data.code) {
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ message: 'Invalid Body' })
+        .send();
+    }
+    const OTP = await this.otpService.findOTP(data.id);
+    const user = await this.userService.findUserByEmail(data.email);
+    if (OTP.code !== data.code || OTP.userId !== user.id) {
+      return res
+        .status(HttpStatus.FORBIDDEN)
+        .json({ message: 'Invalid Body' })
+        .send();
+    }
+
+    return res.json({ message: 'success', url: OTP.id }).send();
+  }
+
+  @Post('/verify/repassword')
+  async rePassword(
+    @Req() req: Request,
+    @Body() data: UserRepasswordStep,
+    @Res() res: Response,
+  ) {
+    if (!data.id || !data.email || !data.newPassword) {
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ message: 'Invalid Body' })
+        .send();
+    }
+    const OTP = await this.otpService.findOTP(data.id);
+    const user = await this.userService.findUserByEmail(data.email);
+    if (OTP.userId !== user.id) {
+      return res
+        .status(HttpStatus.FORBIDDEN)
+        .json({ message: 'Invalid Body' })
+        .send();
+    }
+
+    await this.userService.UpdatePasswordByEmail(data.email, data.newPassword);
+    await this.otpService.deleteOTP(data.id);
+    return res.json({ message: 'success' }).send();
   }
 }
