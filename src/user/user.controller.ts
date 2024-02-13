@@ -26,12 +26,19 @@ export class UserController {
   @Get('/me')
   @UseGuards(AuthGuard)
   async getMe(@Req() req: Request, @Res() res: Response) {
-    res.json({ message: 'success' }).send;
+    const user = await this.userService.findUserByID(req['userId']);
+    res.json({
+      message: 'success',
+      data: {
+        email: user.email,
+        name: user.name,
+      },
+    }).send;
   }
 
   @Post('/login')
   async loginUser(@Body() data: Prisma.UserCreateInput, @Res() res: Response) {
-    const user = await this.userService.findUser(data.email);
+    const user = await this.userService.findUserByEmail(data.email);
 
     if (user.password !== data.password) {
       res

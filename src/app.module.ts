@@ -16,8 +16,3 @@ export class AppModule implements NestModule {
     consumer.apply(LoggerMiddleware).forRoutes('/');
   }
 }
-// export class AppModule implements NestModule {
-//   configure(consumer: MiddlewareConsumer) {
-//     consumer.apply(LoggerMiddleware).forRoutes('/');
-//   }
-// }
