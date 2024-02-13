@@ -1,0 +1,17 @@
+{
+  "name": "test-nest-auth",
+  "dockerComposeFile": "docker-compose.yaml",
+  "service": "app",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint",
+        "ms-vscode.vscode-typescript-next",
+        "yoavbls.pretty-ts-errors",
+        "usernamehw.errorlens"
+      ]
+    }
+  }
+}
