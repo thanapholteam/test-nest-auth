@@ -11,9 +11,9 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
 import { Response } from 'express';
 import { AuthGuard } from 'src/auth/auth.guard';
+import { UserForgotDTO, UserLoginDTO, UserRegisterDTO } from './dto/user.dto';
 
 @Controller('user')
 export class UserController {
@@ -27,7 +27,7 @@ export class UserController {
   @UseGuards(AuthGuard)
   async getMe(@Req() req: Request, @Res() res: Response) {
     const user = await this.userService.findUserByID(req['userId']);
-    res.json({
+    return res.json({
       message: 'success',
       data: {
         email: user.email,
@@ -37,21 +37,27 @@ export class UserController {
   }
 
   @Post('/login')
-  async loginUser(@Body() data: Prisma.UserCreateInput, @Res() res: Response) {
+  async loginUser(@Body() data: UserLoginDTO, @Res() res: Response) {
+    if (!data.email || !data.password) {
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ message: 'Invalid body' })
+        .send();
+    }
     const user = await this.userService.findUserByEmail(data.email);
 
     if (user.password !== data.password) {
-      res
+      return res
         .status(HttpStatus.UNAUTHORIZED)
         .json({
-          message: 'login fail',
+          message: "Can't Login",
         })
         .send();
     }
 
     const session = await this.authService.signSession(user.id);
     res.cookie('ssid', session.ssid);
-    res
+    return res
       .status(HttpStatus.OK)
       .json({
         message: 'success',
@@ -61,12 +67,18 @@ export class UserController {
 
   @Post('/register')
   async createUser(
-    @Body() createUserDto: Prisma.UserCreateInput,
+    @Body() userRegisterDTO: UserRegisterDTO,
     @Res() res: Response,
   ) {
-    await this.userService.createUser(createUserDto);
+    if (!userRegisterDTO.email || !userRegisterDTO.password) {
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ message: 'Invalid body' })
+        .send();
+    }
+    await this.userService.createUser(userRegisterDTO);
 
-    res
+    return res
       .status(HttpStatus.CREATED)
       .json({
         message: 'success',
@@ -74,8 +86,29 @@ export class UserController {
       .send();
   }
 
-  @Post('/forget')
-  async forgetPassword() {}
+  @Post('/forgot')
+  async forgetPassword(
+    @Req() req: Request,
+    @Body() data: UserForgotDTO,
+    @Res() res: Response,
+  ) {
+    if (!data.email) {
+      return res
+        .status(HttpStatus.BAD_REQUEST)
+        .json({ message: 'An email is required' })
+        .send();
+    }
+    const user = await this.userService.findUserByEmail(data.email);
+    if (user === null || user === undefined) {
+      return res
+        .status(HttpStatus.NOT_FOUND)
+        .json({ message: "can't find user" })
+        .send();
+    }
+
+    // TODO: Send Email
+    return res.json({ message: 'success' }).send();
+  }
 
   @Get('/logout')
   @UseGuards(AuthGuard)
@@ -83,6 +116,6 @@ export class UserController {
     await this.sessionService.deleteSession(req['ssid']);
     res.clearCookie('ssid');
     res.json({ message: 'success' }).status(HttpStatus.OK);
-    res.end();
+    return res.end();
   }
 }
