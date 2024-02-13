@@ -5,6 +5,7 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { AuthService } from 'src/auth/auth.service';
 import { SessionService } from 'src/session/session.service';
 import { OtpService } from 'src/otp/otp.service';
+import { EmailService } from 'src/email/email.service';
 
 @Module({
   controllers: [UserController],
@@ -14,6 +15,7 @@ import { OtpService } from 'src/otp/otp.service';
     PrismaService,
     SessionService,
     OtpService,
+    EmailService,
   ],
 })
 export class UserModule {}

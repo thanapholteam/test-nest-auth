@@ -21,6 +21,7 @@ import {
   UserRepasswordStep,
   UserVerifyStep,
 } from './dto/user.dto';
+import { EmailService } from 'src/email/email.service';
 
 @Controller('user')
 export class UserController {
@@ -29,6 +30,7 @@ export class UserController {
     private readonly authService: AuthService,
     private readonly sessionService: SessionService,
     private readonly otpService: OtpService,
+    private readonly emailService: EmailService,
   ) {}
 
   @Get('/me')
@@ -141,9 +143,13 @@ export class UserController {
     }
 
     const otpId = await this.otpService.createOTP(user.id);
-
     // TODO: Send Email
-
+    // send email with emailService (Send OTP to user email)
+    await this.emailService.sendEmail(
+      user.email,
+      'Forgot Password',
+      `Your OTP is ${otpId.code}`,
+    );
     return res.json({ message: 'success', url: otpId.id }).send();
   }
 
