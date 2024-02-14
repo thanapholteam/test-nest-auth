@@ -1,3 +1,4 @@
+import * as bcrypt from 'bcrypt';
 import { OtpService } from 'src/otp/otp.service';
 import { SessionService } from 'src/session/session.service';
 import { AuthService } from './../auth/auth.service';
@@ -64,7 +65,8 @@ export class UserController {
         .send();
     }
 
-    if (user.password !== data.password) {
+    const result = await bcrypt.compare(data.password, user.password);
+    if (!result) {
       return res
         .status(HttpStatus.UNAUTHORIZED)
         .json({
@@ -94,6 +96,9 @@ export class UserController {
         .json({ message: 'Invalid body' })
         .send();
     }
+
+    const hash = await bcrypt.hash(userRegisterDTO.password, 10);
+    userRegisterDTO.password = hash;
     const user = await this.userService.createUser(userRegisterDTO);
 
     if (user === null) {
