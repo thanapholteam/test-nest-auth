@@ -20,6 +20,17 @@ export class OtpService {
     });
   }
 
+  async verifyOTP(id: string) {
+    return this.prismaService.oneTimePass.update({
+      where: {
+        id: id,
+      },
+      data: {
+        verify: true,
+      },
+    });
+  }
+
   async findOTP(id: string) {
     return this.prismaService.oneTimePass.findUnique({
       where: {

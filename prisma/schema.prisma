@@ -27,6 +27,7 @@ model Session {
 
 model OneTimePass {
   id        String   @id @default(uuid())
+  verify    Boolean  @default(false)
   code      String
   userId    String
   user      User     @relation(fields: [userId], references: [id])

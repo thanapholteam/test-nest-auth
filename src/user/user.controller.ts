@@ -55,6 +55,14 @@ export class UserController {
         .send();
     }
     const user = await this.userService.findUserByEmail(data.email);
+    if (!user) {
+      return res
+        .status(HttpStatus.NO_CONTENT)
+        .json({
+          message: 'No user',
+        })
+        .send();
+    }
 
     if (user.password !== data.password) {
       return res
@@ -129,7 +137,7 @@ export class UserController {
     const user = await this.userService.findUserByEmail(data.email);
     if (user === null || user === undefined) {
       return res
-        .status(HttpStatus.NOT_FOUND)
+        .status(HttpStatus.BAD_REQUEST)
         .json({ message: "can't find user" })
         .send();
     }
@@ -169,17 +177,26 @@ export class UserController {
     const user = await this.userService.findUserByEmail(data.email);
     if (!OTP || !user) {
       return res
-        .status(HttpStatus.FORBIDDEN)
+        .status(HttpStatus.BAD_REQUEST)
         .json({ message: 'Invalid OTP' })
+        .send();
+    }
+
+    if (OTP.expiredAt < new Date()) {
+      return res
+        .status(HttpStatus.NOT_ACCEPTABLE)
+        .json({ message: 'OTP Expired' })
         .send();
     }
 
     if (OTP.code !== data.code || OTP.userId !== user.id) {
       return res
-        .status(HttpStatus.FORBIDDEN)
+        .status(HttpStatus.NO_CONTENT)
         .json({ message: 'Invalid Body' })
         .send();
     }
+
+    await this.otpService.verifyOTP(data.id);
 
     return res.json({ message: 'success', url: OTP.id }).send();
   }
@@ -190,7 +207,7 @@ export class UserController {
     @Body() data: UserRepasswordStep,
     @Res() res: Response,
   ) {
-    if (!data.id || !data.email || !data.newPassword) {
+    if (!data.id || !data.email || !data.newPassword || !data.code) {
       return res
         .status(HttpStatus.BAD_REQUEST)
         .json({ message: 'Invalid Body' })
@@ -200,13 +217,20 @@ export class UserController {
     const user = await this.userService.findUserByEmail(data.email);
     if (!OTP || !user) {
       return res
-        .status(HttpStatus.FORBIDDEN)
+        .status(HttpStatus.BAD_REQUEST)
         .json({ message: 'Invalid OTP' })
         .send();
     }
+    if (!OTP.verify) {
+      return res
+        .status(HttpStatus.FAILED_DEPENDENCY)
+        .json({ message: 'OTP not verify' })
+        .send();
+    }
+
     if (OTP.code !== data.code || OTP.userId !== user.id) {
       return res
-        .status(HttpStatus.FORBIDDEN)
+        .status(HttpStatus.NO_CONTENT)
         .json({ message: 'Invalid Body' })
         .send();
     }
