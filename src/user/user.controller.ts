@@ -204,8 +204,7 @@ export class UserController {
         .json({ message: 'Invalid OTP' })
         .send();
     }
-
-    if (OTP.userId !== user.id) {
+    if (OTP.code !== data.code || OTP.userId !== user.id) {
       return res
         .status(HttpStatus.FORBIDDEN)
         .json({ message: 'Invalid Body' })

@@ -37,4 +37,6 @@ export class UserRepasswordStep {
   email: string;
   @IsString()
   newPassword: string;
+  @IsString()
+  code: string;
 }
