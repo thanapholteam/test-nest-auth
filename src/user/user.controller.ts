@@ -167,6 +167,13 @@ export class UserController {
     }
     const OTP = await this.otpService.findOTP(data.id);
     const user = await this.userService.findUserByEmail(data.email);
+    if (!OTP || !user) {
+      return res
+        .status(HttpStatus.FORBIDDEN)
+        .json({ message: 'Invalid OTP' })
+        .send();
+    }
+
     if (OTP.code !== data.code || OTP.userId !== user.id) {
       return res
         .status(HttpStatus.FORBIDDEN)
@@ -177,7 +184,7 @@ export class UserController {
     return res.json({ message: 'success', url: OTP.id }).send();
   }
 
-  @Post('/verify/repassword')
+  @Post('/reset-password')
   async rePassword(
     @Req() req: Request,
     @Body() data: UserRepasswordStep,
@@ -191,6 +198,13 @@ export class UserController {
     }
     const OTP = await this.otpService.findOTP(data.id);
     const user = await this.userService.findUserByEmail(data.email);
+    if (!OTP || !user) {
+      return res
+        .status(HttpStatus.FORBIDDEN)
+        .json({ message: 'Invalid OTP' })
+        .send();
+    }
+
     if (OTP.userId !== user.id) {
       return res
         .status(HttpStatus.FORBIDDEN)
