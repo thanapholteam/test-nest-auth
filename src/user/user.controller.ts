@@ -137,7 +137,7 @@ export class UserController {
     const user = await this.userService.findUserByEmail(data.email);
     if (user === null || user === undefined) {
       return res
-        .status(HttpStatus.BAD_REQUEST)
+        .status(HttpStatus.NO_CONTENT)
         .json({ message: "can't find user" })
         .send();
     }
