@@ -239,6 +239,8 @@ export class UserController {
         .json({ message: 'Invalid Body' })
         .send();
     }
+    const hash = await bcrypt.hash(data.newPassword, 10);
+    data.newPassword = hash;
 
     await this.userService.UpdatePasswordByEmail(data.email, data.newPassword);
     await this.otpService.deleteOTP(data.id);
